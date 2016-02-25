@@ -31,12 +31,13 @@ public class NotificationService extends Service {
 
         final int time = Integer.parseInt(timeText) * 60 * 1000;
 
-        final Notification notification = new Notification.Builder(this)
+        final Notification notification = new Notification.BigTextStyle(new Notification.Builder(this)
                 .setTicker(messageText)
                 .setSmallIcon(R.drawable.ic_alarm_white_18dp)
                 .setContentText(messageText)
-                .setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0))
-                .setAutoCancel(true)
+                .setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT), 0))
+                .setAutoCancel(true))
+                .bigText(messageText)
                 .build();
 
         final NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -57,7 +58,7 @@ public class NotificationService extends Service {
     public void onDestroy() {
         Log.i("Notification Service", "onDestroy");
 
-        handler.removeCallbacks(null);
+        handler.removeCallbacksAndMessages(null);
 
         super.onDestroy();
     }
