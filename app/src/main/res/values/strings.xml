@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Lesson 6 - Welcome to Sevices</string>
+    <string name="timeTextHint">Time</string>
+    <string name="timeTextDefault">30</string>
+    <string name="messageTextHit">Message text</string>
+    <string name="messageTextDefault">You have [time] minutes, do not drink tea, stop this disgrace!</string>
+    <string name="startButton">Start notification</string>
+    <string name="stopButton">Stop notification</string>
+</resources>
