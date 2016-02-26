@@ -13,13 +13,17 @@ import android.util.Log;
 
 public class NotificationService extends Service {
 
+    public static boolean alreadyRun = false;
+
     final Handler handler = new Handler();
 
     @Override
     public void onCreate() {
+        super.onCreate();
+
         Log.i("Notification Service", "onCreate");
 
-        super.onCreate();
+        alreadyRun = true;
     }
 
     @Override
@@ -35,14 +39,15 @@ public class NotificationService extends Service {
                 .setTicker(messageText)
                 .setSmallIcon(R.drawable.ic_alarm_white_18dp)
                 .setContentText(messageText)
-                .setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT), 0))
+                .setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT), PendingIntent.FLAG_UPDATE_CURRENT))
                 .setAutoCancel(true))
                 .bigText(messageText)
                 .build();
 
         final NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        handler.removeCallbacks(null);
+        handler.removeCallbacksAndMessages(null);
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -59,6 +64,8 @@ public class NotificationService extends Service {
         Log.i("Notification Service", "onDestroy");
 
         handler.removeCallbacksAndMessages(null);
+
+        alreadyRun = false;
 
         super.onDestroy();
     }

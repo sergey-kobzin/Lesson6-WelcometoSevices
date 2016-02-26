@@ -2,6 +2,7 @@ package com.shpp.skobzin.lesson6_welcometosevices;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -23,23 +24,27 @@ public class MainActivity extends Activity {
         timeText = (EditText) findViewById(R.id.timeText);
         messageText = (EditText) findViewById(R.id.messageText);
 
-        if (savedInstanceState == null) {
+        if (NotificationService.alreadyRun) {
+            SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+            timeText.setText(sharedPreferences.getString("time", getString(R.string.timeTextDefault)));
+            messageText.setText(sharedPreferences.getString("message", getString(R.string.messageTextDefault)));
+        } else {
             timeText.setText(R.string.timeTextDefault);
             messageText.setText(R.string.messageTextDefault);
-        } else {
-            timeText.setText(savedInstanceState.getString("time"));
-            messageText.setText(savedInstanceState.getString("message"));
         }
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
+    protected void onDestroy() {
+        Log.i("MainActivity", "onDestroy");
 
-        Log.i("MainActivity", "onSaveInstanceState");
+        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+        sharedPreferences.edit()
+                .putString("time", timeText.getText().toString())
+                .putString("message", messageText.getText().toString())
+                .commit();
 
-        outState.putString("time", timeText.getText().toString());
-        outState.putString("message", messageText.getText().toString());
+        super.onDestroy();
     }
 
     public void onClick(View view) {
@@ -48,9 +53,7 @@ public class MainActivity extends Activity {
             case R.id.startButton:
                 Log.i("MainActivity", "onClick: startButton");
 
-                serviceIntent.putExtra("time", timeText.getText().toString());
-                serviceIntent.putExtra("message", messageText.getText().toString());
-                startService(serviceIntent);
+                startService(serviceIntent.putExtra("time", timeText.getText().toString()).putExtra("message", messageText.getText().toString()));
                 break;
             case R.id.stopButton:
                 Log.i("MainActivity", "onClick: cancelButton");
