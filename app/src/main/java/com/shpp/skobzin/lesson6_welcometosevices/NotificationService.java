@@ -7,72 +7,84 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
 public class NotificationService extends Service {
 
-    public static boolean alreadyRun = false;
+    private final String LOG_TAG = "NotificationService";
 
-    final Handler handler = new Handler();
+    private static boolean alreadyRun = false;
+    private String mTime;
+    private String mMessage;
+    private final Handler handler = new Handler();
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        Log.i("Notification Service", "onCreate");
-
+        Log.i(LOG_TAG, "onCreate");
         alreadyRun = true;
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i("Notification Service", "onStartCommand");
+        Log.i(LOG_TAG, "onStartCommand");
 
-        String timeText = intent.getStringExtra("time");
-        String messageText = intent.getStringExtra("message").replace("[time]", timeText);
+        switch (intent.getStringExtra(Constants.EXTRA_ACTION)) {
+            case "set":
+                Log.i(LOG_TAG, "onStartCommand: set");
+                mTime = intent.getStringExtra(Constants.EXTRA_TIME);
+                mMessage = intent.getStringExtra(Constants.EXTRA_MESSAGE).replace("[time]", mTime);
 
-        final int time = Integer.parseInt(timeText) * 60 * 1000;
+                final int time = Integer.parseInt(mTime) * 60 * 1000;
 
-        final Notification notification = new Notification.BigTextStyle(new Notification.Builder(this)
-                .setTicker(messageText)
-                .setSmallIcon(R.drawable.ic_alarm_white_18dp)
-                .setContentText(messageText)
-                .setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT), PendingIntent.FLAG_UPDATE_CURRENT))
-                .setAutoCancel(true))
-                .bigText(messageText)
-                .build();
+                final Notification notification = new Notification.BigTextStyle(new Notification.Builder(this)
+                        .setTicker(mMessage)
+                        .setSmallIcon(R.drawable.ic_alarm_white_18dp)
+                        .setContentText(mMessage)
+                        .setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class)
+                                .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT), PendingIntent.FLAG_UPDATE_CURRENT))
+                        .setAutoCancel(true))
+                        .bigText(mMessage)
+                        .build();
 
-        final NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                final NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        handler.removeCallbacksAndMessages(null);
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                notificationManager.notify(0, notification);
-                handler.postDelayed(this, time);
-            }
-        }, time);
+                handler.removeCallbacksAndMessages(null);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        notificationManager.notify(0, notification);
+                        handler.postDelayed(this, time);
+                    }
+                }, time);
+                break;
+            case "get":
+                Log.i(LOG_TAG, "onStartCommand: get");
+                sendBroadcast(new Intent(Constants.BROADCAST_ACTION).putExtra(Constants.EXTRA_TIME, mTime).putExtra(Constants.EXTRA_MESSAGE, mMessage));
+        }
 
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onDestroy() {
-        Log.i("Notification Service", "onDestroy");
-
-        handler.removeCallbacksAndMessages(null);
-
-        alreadyRun = false;
-
         super.onDestroy();
+
+        Log.i(LOG_TAG, "onDestroy");
+        handler.removeCallbacksAndMessages(null);
+        alreadyRun = false;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        // It's just a cap
         return null;
+    }
+
+    public static boolean isAlreadyRun() {
+        return alreadyRun;
     }
 }
